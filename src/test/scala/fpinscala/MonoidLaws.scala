@@ -23,13 +23,18 @@ object IntMultiplicationMonoidLaws extends MonoidLaws(intMultiplication)
 object BooleanOrMonoidLaws extends MonoidLaws(booleanOr)
 object BooleanAndMonoidLaws extends MonoidLaws(booleanAnd)
 
-object FoldMapSpecification extends Properties("FoldMap") {
+object OtherFunctionsSpecification extends Properties("Other") {
   property("string to int foldMap under addition") = {
     forAll {(as: List[String]) => foldMap(as, intAddition)(_.length) == as.map(_.length).sum}
   }
 
   property("foldRightViaFoldMap is the same as foldRight") = {
-    val f = (a: String, b: String) => s"test${a}and${b}"
+    val f = (_:String) + (_:String)
     forAll {(as: List[String], z: String) => foldRightViaFoldMap(as, z)(f) == as.foldRight(z)(f)}
+  }
+
+  property("foldLeftViaFoldMap is the same as foldLeft") = {
+    val f = (_:String) + (_:String)
+    forAll {(as: List[String], z: String) => foldLeftViaFoldMap(as, z)(f) == as.foldLeft(z)(f)}
   }
 }
