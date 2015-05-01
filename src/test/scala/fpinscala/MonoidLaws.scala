@@ -37,4 +37,8 @@ object OtherFunctionsSpecification extends Properties("Other") {
     val f = (_:String) + (_:String)
     forAll {(as: List[String], z: String) => foldLeftViaFoldMap(as, z)(f) == as.foldLeft(z)(f)}
   }
+
+  property("foldMapV is the same as foldMap") = {
+    forAll {(as: Vector[String]) => foldMapV(as,intMultiplication)(_.length) == foldMap(as.toList,intMultiplication)(_.length)}
+  }
 }
