@@ -14,6 +14,7 @@ object Monoids {
     override def op(a1: List[A], a2: List[A]): List[A] = a1 ++ a2
     override def zero: List[A] = Nil
   }
+  def concatenate[A](as: List[A], m: Monoid[A]): A = as.foldLeft(m.zero)(m.op)
 
   /* ------- Exercise 10.1 ------- */
 
@@ -48,5 +49,15 @@ object Monoids {
   def endoMonoid[A] = new Monoid[Endo[A]] {
     override def op(a1: Endo[A], a2: Endo[A]): Endo[A] = a2 andThen a1
     override def zero: Endo[A] = identity
+  }
+
+  /* ------- Exercise 10.5 ------- */
+
+  def foldMap[A,B](as: List[A], m: Monoid[B])(f: A => B): B = as.foldLeft(m.zero)((b, a) => m.op(b, f(a)))
+
+  /* ------- Exercise 10.6 ------- */
+
+  def foldRightViaFoldMap[A,B](as: List[A], b: B)(f: (A,B) => B): B = {
+    foldMap(as, endoMonoid[B])(a => b => f(a,b))(b)
   }
 }

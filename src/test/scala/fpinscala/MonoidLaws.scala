@@ -2,6 +2,7 @@ package fpinscala
 
 import org.scalacheck.{Arbitrary, Properties}
 import org.scalacheck.Prop.forAll
+import Monoids._
 
 abstract class MonoidLaws[A: Arbitrary](m: Monoid[A]) extends Properties("Monoid") {
   property("zero on the left") = {
@@ -17,7 +18,18 @@ abstract class MonoidLaws[A: Arbitrary](m: Monoid[A]) extends Properties("Monoid
   }
 }
 
-object IntAdditionMonoidLaws extends MonoidLaws(Monoids.intAddition)
-object IntMultiplicationMonoidLaws extends MonoidLaws(Monoids.intMultiplication)
-object BooleanOrMonoidLaws extends MonoidLaws(Monoids.booleanOr)
-object BooleanAndMonoidLaws extends MonoidLaws(Monoids.booleanAnd)
+object IntAdditionMonoidLaws extends MonoidLaws(intAddition)
+object IntMultiplicationMonoidLaws extends MonoidLaws(intMultiplication)
+object BooleanOrMonoidLaws extends MonoidLaws(booleanOr)
+object BooleanAndMonoidLaws extends MonoidLaws(booleanAnd)
+
+object FoldMapSpecification extends Properties("FoldMap") {
+  property("string to int foldMap under addition") = {
+    forAll {(as: List[String]) => foldMap(as, intAddition)(_.length) == as.map(_.length).sum}
+  }
+
+  property("foldRightViaFoldMap is the same as foldRight") = {
+    val f = (a: String, b: String) => s"test${a}and${b}"
+    forAll {(as: List[String], z: String) => foldRightViaFoldMap(as, z)(f) == as.foldRight(z)(f)}
+  }
+}
