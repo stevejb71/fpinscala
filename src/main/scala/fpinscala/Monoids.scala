@@ -116,4 +116,23 @@ object Monoids {
     }
     if(s.isEmpty) 0 else count(foldMapV(s.trim, wcMonoid)(toWC))
   }
+
+  /* -------- Exercise 10.12 -------- */
+
+  trait Foldable[F[_]] {
+    def foldRight[A, B](as: F[A])(z: B)(f: (A, B) => B): B
+    def foldLeft[A, B](as: F[A])(z: B)(f: (B, A) => B): B
+    def foldMap[A, B](as: F[A])(f: A => B)(mb: Monoid[B]): B
+    def concatenate[A](as: F[A])(m: Monoid[A]): A = foldLeft(as)(m.zero)(m.op)
+    def toList[A](as: F[A]): List[A]
+  }
+
+  object ListFoldable extends Foldable[List] {
+    override def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B = as.foldRight(z)(f)
+    override def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B = as.foldLeft(z)(f)
+    override def toList[A](as: List[A]): List[A] = as
+    override def foldMap[A, B](as: List[A])(f: A => B)(mb: Monoid[B]): B = foldLeft(as)(mb.zero)((b,a) => mb.op(b,f(a)))
+  }
+
+
 }

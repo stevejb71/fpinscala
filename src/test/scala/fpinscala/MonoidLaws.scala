@@ -64,3 +64,14 @@ object OtherFunctionsSpecification extends Properties("Other") {
     }}
   }
 }
+
+object ListFoldableSpecification extends Properties("ListFoldable") {
+  property("foldMap on int addition is map + sum") = {
+    forAll {(as:List[String]) => ListFoldable.foldMap(as)(_.length)(intAddition) == (as map (_.length)).sum}
+  }
+
+  property("concatenate on List of String is mkString") = {
+    forAll {(as:List[String]) => ListFoldable.concatenate(as)(stringMonoid) == as.mkString}
+  }
+}
+
