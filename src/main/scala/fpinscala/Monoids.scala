@@ -188,4 +188,21 @@ object Monoids {
     override def op(f1: A => B, f2: A => B): A => B = a => B.op(f1(a),f2(a))
     override def zero: A => B = a => B.zero
   }
+
+  /* -------- Exercise 10.18 -------- */
+
+  def mapMergeMonoid[K,V](V: Monoid[V]): Monoid[Map[K,V]] = new Monoid[Map[K, V]] {
+    override def op(a: Map[K, V], b: Map[K, V]): Map[K, V] = {
+      (a.toSeq ++ b.toSeq).foldLeft(zero) {
+        case (acc,(k,v)) => {
+          def orZero(m: Map[K,V]) = m.getOrElse(k, V.zero)
+          acc.updated(k, V.op(orZero(a),orZero(b)))
+        }
+      }
+    }
+    override def zero: Map[K, V] = Map()
+  }
+
+  type Bag[A] = Map[A,Int]
+  def bag[A](as: IndexedSeq[A]): Bag[A] = foldMapV(as, mapMergeMonoid[A,Int](intAddition))(a => Map(a -> 1))
 }

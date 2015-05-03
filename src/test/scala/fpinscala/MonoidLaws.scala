@@ -36,6 +36,7 @@ object IntMultiplicationMonoidLaws extends MonoidLaws(intMultiplication)
 object BooleanOrMonoidLaws extends MonoidLaws(booleanOr)
 object BooleanAndMonoidLaws extends MonoidLaws(booleanAnd)
 object WCMonoidLaws extends MonoidLaws(wcMonoid)(ArbitraryInstances.arbWC)
+object MapMergeMonoidLaws extends MonoidLaws(mapMergeMonoid[Int,String](stringMonoid))
 
 object OtherFunctionsSpecification extends Properties("Other") {
   property("string to int foldMap under addition") = {
@@ -61,6 +62,21 @@ object OtherFunctionsSpecification extends Properties("Other") {
       val nonEmptyWords = words.map(w => (if(w.isEmpty) "X" else w).replace(' ','X'))
       val s = nonEmptyWords.mkString(" ")
       wc(s) == words.length
+    }}
+  }
+
+  property("bag contains all the elements of its input IndexedSeq") = {
+    forAll {(as: Vector[Int]) => as.forall(bag(as).contains)}
+  }
+
+  property("bag is no bigger than its input IndexedSeq") = {
+    forAll {(as: Vector[Int]) => bag(as).size <= as.size}
+  }
+
+  property("bag of a Vector of sz duplicates of m has 1 element with value m") = {
+    forAll {(m: String, n: Int) => {
+      val sz = 1 + (n % 100).abs
+      bag(List.fill(sz)(m).toIndexedSeq).toList == List(m -> sz)
     }}
   }
 }
