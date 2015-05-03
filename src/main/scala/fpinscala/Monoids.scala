@@ -82,4 +82,38 @@ object Monoids {
       m.op(foldMapV(l,m)(f), foldMapV(r,m)(f))
     }
   }
+
+  /* -------- Exercise 10.10 -------- */
+
+  sealed trait WC
+  case class Stub(chars: String) extends WC
+  case class Part(lStub: String, words: Int, rStub: String) extends WC
+
+  def count(wc: WC): Int = {
+    def oneIfNonEmpty(s: String) = if(s.isEmpty) 0 else 1
+    wc match {
+      case Stub(_) => 1
+      case Part(l,w,r) => oneIfNonEmpty(l) + w + oneIfNonEmpty(r)
+    }
+  }
+
+  val wcMonoid  = new Monoid[WC] {
+    override def op(wc1: WC, wc2: WC) = (wc1,wc2) match {
+      case (Stub(c1),Stub(c2)) => Stub(c1 + c2)
+      case (Stub(s),Part(l,w,r)) => Part(s+l,w,r)
+      case (Part(l,w,r),Stub(s)) => Part(l,w,r+s)
+      case (Part(l1,w1,r1),Part(l2,w2,r2)) => Part(l1,w1+w2+1,r2)
+    }
+    override def zero = Stub("")
+  }
+
+  /* -------- Exercise 10.11 -------- */
+
+  def wc(s: String): Int = {
+    def toWC(c: Char) = c match {
+      case ' ' => Part("",0,"")
+      case _ => Stub(c.toString)
+    }
+    if(s.isEmpty) 0 else count(foldMapV(s.trim, wcMonoid)(toWC))
+  }
 }
