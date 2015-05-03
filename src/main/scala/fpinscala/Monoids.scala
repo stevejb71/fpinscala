@@ -161,4 +161,31 @@ object Monoids {
     }
     // foldLeft / Right / toList defaulted so inefficient
   }
+
+  /* -------- Exercise 10.14 -------- */
+
+  object OptionFoldable extends Foldable[Option] {
+    override def foldRight[A, B](a: Option[A])(z: B)(f: (A, B) => B) = a.fold(z)(f(_,z))
+    override def foldLeft[A, B](a: Option[A])(z: B)(f: (B, A) => B) = a.fold(z)(f(z,_))
+    override def foldMap[A, B](a: Option[A])(f: A => B)(mb: Monoid[B]): B = (a map f) getOrElse mb.zero
+    override def toList[A](a: Option[A]) = a.toList
+  }
+
+  /* -------- Exercise 10.15 -------- */
+
+  // See Foldable definition
+
+  /* -------- Exercise 10.16 -------- */
+
+  def productMonoid[A,B](a: Monoid[A], b: Monoid[B]): Monoid[(A,B)] = new Monoid[(A, B)] {
+    override def op(x1: (A, B), x2: (A, B)): (A, B) = (a.op(x1._1,x2._1), b.op(x1._2,x2._2))
+    override def zero: (A, B) = (a.zero,b.zero)
+  }
+
+  /* -------- Exercise 10.17 -------- */
+
+  def functionMonoid[A,B](B: Monoid[B]): Monoid[A => B] = new Monoid[A => B] {
+    override def op(f1: A => B, f2: A => B): A => B = a => B.op(f1(a),f2(a))
+    override def zero: A => B = a => B.zero
+  }
 }
