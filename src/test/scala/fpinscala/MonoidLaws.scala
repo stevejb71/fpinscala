@@ -1,10 +1,10 @@
 package fpinscala
 
-import org.scalacheck.{Gen, Arbitrary, Properties}
-import org.scalacheck.Prop.{forAll, BooleanOperators}
-import Monoids._
+import fpinscala.Monoids._
+import org.scalacheck.Prop.forAll
+import org.scalacheck.{Arbitrary, Gen, Properties}
 
-abstract class MonoidLaws[A](m: Monoid[A])(implicit a: Arbitrary[A]) extends Properties("Monoid") {
+abstract class MonoidLaws[A](m: Monoid[A], name: String)(implicit a: Arbitrary[A]) extends Properties(name) {
   property("zero on the left") = {
     forAll {(a: A) => m.op(m.zero, a) == a}
   }
@@ -31,12 +31,13 @@ object ArbitraryInstances {
   val arbWC = Arbitrary(oneOf(genWCStub, genWCPart))
 }
 
-object IntAdditionMonoidLaws extends MonoidLaws(intAddition)
-object IntMultiplicationMonoidLaws extends MonoidLaws(intMultiplication)
-object BooleanOrMonoidLaws extends MonoidLaws(booleanOr)
-object BooleanAndMonoidLaws extends MonoidLaws(booleanAnd)
-object WCMonoidLaws extends MonoidLaws(wcMonoid)(ArbitraryInstances.arbWC)
-object MapMergeMonoidLaws extends MonoidLaws(mapMergeMonoid[Int,String](stringMonoid))
+object IntAdditionMonoidLaws extends MonoidLaws(intAddition, "Int addition monoid")
+object IntMultiplicationMonoidLaws extends MonoidLaws(intMultiplication, "Int multiplication monoid")
+object BooleanOrMonoidLaws extends MonoidLaws(booleanOr, "Boolean or monoid")
+object BooleanAndMonoidLaws extends MonoidLaws(booleanAnd, "Boolean and monoid")
+object StringMonoidLaws extends MonoidLaws(stringMonoid, "String monoid")
+object WCMonoidLaws extends MonoidLaws(wcMonoid, "WC monoid")(ArbitraryInstances.arbWC)
+object MapMergeMonoidLaws extends MonoidLaws(mapMergeMonoid[Int,String](stringMonoid), "Map merge monoid")
 
 object OtherFunctionsSpecification extends Properties("Other") {
   property("string to int foldMap under addition") = {
