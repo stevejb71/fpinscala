@@ -24,6 +24,7 @@ trait Monad[F[_]] extends Functor[F] {
     ms.foldRight(unit(Nil:List[A]))((a,b) => map2(f(a),b)((res,acc) => if(res) acc else a :: acc))
   /* -------- Exercise 11.7 ------- */
   def compose[A,B,C](f: A => F[B], g: B => F[C]): A => F[C] = a => flatMap(f(a))(g)
+  def join[A](mma: F[F[A]]): F[A] = flatMap(mma)(identity)
 }
 
 object Monads {
