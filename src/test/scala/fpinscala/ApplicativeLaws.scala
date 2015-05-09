@@ -15,9 +15,11 @@ object ApplicativeLaws {
   def leftIdentity[M[_], A](F: Applicative[M], fa: M[A]): Boolean = F.map2(F.unit(()), fa)((_,a) => a) === fa
   def rightIdentity[M[_], A](F: Applicative[M], fa: M[A]): Boolean = F.map2(fa, F.unit(()))((a,_) => a) === fa
 
-  private def assoc[A,B,C](p: (A,(B,C))): ((A,B),C) = p match {
-    case (a,(b,c)) => ((a,b),c)
+  def associativity[M[_],A,B,C](F: Applicative[M], fa: M[A], fb: M[B], fc: M[C]): Boolean = {
+    def assoc(p: (A,(B,C))): ((A,B),C) = p match {
+      case (a,(b,c)) => ((a,b),c)
+    }
+    F.product(F.product(fa,fb),fc) === F.map(F.product(fa,F.product(fb,fc)))(assoc)
   }
-  def associativity[M[_],A,B,C](F: Applicative[M], fa: M[A], fb: M[B], fc: M[C]): Boolean = F.product(F.product(fa,fb),fc) === F.map(F.product(fa,F.product(fb,fc)))(assoc)
 }
 
