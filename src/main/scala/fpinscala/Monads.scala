@@ -51,4 +51,29 @@ object Monads {
     override def unit[A](a: => A) = List(a)
     override def flatMap[A, B](ma: List[A])(f: A => List[B]) = ma flatMap f
   }
+
+  /* -------- Exercise 11.17 ------- */
+
+  case class Id[A](value: A) extends AnyVal
+
+  object Id {
+    implicit val idMonad = new Monad[Id] {
+      override def unit[A](a: => A): Id[A] = Id(a)
+      override def flatMap[A, B](ma: Id[A])(f: A => Id[B]): Id[B] = f(ma.value)
+    }
+  }
+
+  /* -------- Exercise 11.20 ------- */
+
+  case class Reader[R,A](run: R => A) extends AnyVal {
+    def map[B](f: A => B): Reader[R,B] = Reader.readerMonad.map(this)(f)
+    def flatMap[B](f: A => Reader[R,B]): Reader[R,B] = Reader.readerMonad.flatMap(this)(f)
+  }
+
+  object Reader {
+    def readerMonad[R] = new Monad[({type f[x] = Reader[R, x]})#f] {
+      override def unit[A](a: => A): Reader[R, A] = Reader(_ => a)
+      override def flatMap[A, B](ma: Reader[R, A])(f: A => Reader[R, B]): Reader[R, B] = Reader(r => f(ma.run(r)).run(r))
+    }
+  }
 }
