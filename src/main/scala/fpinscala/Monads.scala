@@ -1,18 +1,14 @@
 package fpinscala
 
-trait Monad[F[_]] extends Functor[F] {
+trait Monad[F[_]] extends Applicative[F] {
   def unit[A](a: => A): F[A]
   /* -------- Exercise 11.8 ------- */
   def flatMap[A, B](ma: F[A])(f: A => F[B]): F[B] = compose((_:Unit) => ma, f)(())
-  def map[A, B](ma: F[A])(f: A => B): F[B] = flatMap(ma)(a => unit(f(a)))
-  def map2[A, B, C](ma: F[A], mb: F[B])(f: (A, B) => C): F[C] = flatMap(ma)(a => map(mb)(f(a, _)))
+  // map, map2 moved to Applicative
   /* -------- Exercise 11.3 ------- */
-  def sequence[A](lma: List[F[A]]): F[List[A]] = lma.foldLeft(unit(Nil: List[A]))((acc, b) => map2(b, acc)(_ :: _))
-  def traverse[A, B](la: List[A])(f: A => F[B]): F[List[B]] = sequence(la map f)
+  // Moved to Applicative
   /* -------- Exercise 11.4 ------- */
-  def replicateM[A](n: Int, ma: F[A]): F[List[A]] =
-    if (n <= 0) unit(Nil)
-    else map2(ma, replicateM(n - 1, ma))(_ :: _)
+  // Moved to Applicative
   /* -------- Exercise 11.6 ------- */
   def filterM[A](ms: List[A])(f: A => F[Boolean]): F[List[A]] =
     ms.foldRight(unit(Nil:List[A]))((a,b) => map2(f(a),b)((res,acc) => if(res) acc else a :: acc))
