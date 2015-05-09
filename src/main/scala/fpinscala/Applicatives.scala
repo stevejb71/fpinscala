@@ -29,6 +29,13 @@ trait Applicative[F[_]] extends Functor[F] {
     override def map2[A, B, C](fa: (F[A], G[A]), fb: (F[B], G[B]))(f: (A, B) => C): (F[C], G[C]) =
       (base.map2(fa._1, fb._1)(f), G.map2(fa._2, fb._2)(f))
   }
+
+  /* ------- Exercise 12.9 -------- */
+  def compose[G[_]](G: Applicative[G]) = new Applicative[({type f[x] = F[G[x]]})#f] {
+    private val base = Applicative.this
+    override def unit[A](a: => A): F[G[A]] = base.unit(G.unit(a))
+    override def map2[A, B, C](fga: F[G[A]], fgb: F[G[B]])(f: (A, B) => C): F[G[C]] = base.map2(fga,fgb)((ga,gb) => G.map2(ga,gb)(f))
+  }
 }
 
 
