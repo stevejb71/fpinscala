@@ -23,9 +23,24 @@ trait Applicative[F[_]] extends Functor[F] {
   def map4[A,B,C,D,E](fa: F[A], fb: F[B], fc: F[C], fd: F[D])(f: (A,B,C,D) => E): F[E] = apply(apply(apply(map(fa)(f.curried))(fb))(fc))(fd)
 }
 
-object Applicatives {
-  val streamApplicative = new Applicative[Stream] {
-    override def unit[A](a: => A): Stream[A] = Stream.continually(a)
-    override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] = (fa zip fb) map f.tupled
+object StreamApplicative extends Applicative[Stream] {
+  override def unit[A](a: => A): Stream[A] = Stream.continually(a)
+  override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] = (fa zip fb) map f.tupled
+}
+
+/* ------- Exercise 12.6 -------- */
+sealed trait Validation[+E,+A]
+case class Failure[E](head: E, tail: Vector[E] = Vector()) extends Validation[E,Nothing]
+case class Success[A](a: A) extends Validation[Nothing,A]
+
+object Validation {
+  def validationApplicative[E] = new Applicative[({type f[x] = Validation[E,x]})#f] {
+    override def unit[A](a: => A): Validation[E, A] = Success(a)
+    override def map2[A, B, C](fa: Validation[E, A], fb: Validation[E, B])(f: (A, B) => C): Validation[E, C] = (fa, fb) match {
+      case (Success(a),Success(b)) => Success(f(a,b))
+      case (Failure(ha,ta),Failure(hb,tb)) => Failure(ha, ta ++ Vector(hb) ++ tb)
+      case (Failure(h,t),_) => Failure(h,t)
+      case (_,Failure(h,t)) => Failure(h,t)
+    }
   }
 }
