@@ -7,3 +7,5 @@ scalaVersion := "2.11.6"
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-language:higherKinds", "-language:postfixOps")
 
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.12.2" % "test"
+
+initialCommands in console := """import fpinscala._, Traverse._"""
