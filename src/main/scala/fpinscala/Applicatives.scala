@@ -107,8 +107,11 @@ object Traverse {
   }
 
   val treeTraverse = new Traverse[Tree] {
-    override def map[A, B](fa: Tree[A])(f: A => B): Tree[B] = Tree(f(fa.head),fa.tail map f)
-    override def sequence[G[_] : Applicative, A](fga: Tree[G[A]]): G[Tree[A]] = ???
+    override def map[A, B](ta: Tree[A])(f: A => B): Tree[B] = Tree(f(ta.head), ta.tail.map(map(_)(f)))
+    override def traverse[G[_], A, B](ta: Tree[A])(f: A => G[B])(implicit G: Applicative[G]): G[Tree[B]] = {
+      val h = f(ta.head)
+      val t = listTraverse.traverse(ta.tail)(traverse(_)(f))
+      G.map2(h, t)(Tree(_,_))
+    }
   }
 }
-
