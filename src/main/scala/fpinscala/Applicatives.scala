@@ -1,5 +1,7 @@
 package fpinscala
 
+import fpinscala.Monoids.Foldable
+
 trait Applicative[F[_]] extends Functor[F] {
   def unit[A](a: => A): F[A]
   def map2[A, B, C](fa: F[A], fb: F[B])(f: (A, B) => C): F[C] = apply(map(fa)(f.curried))(fb)
@@ -43,6 +45,7 @@ trait Applicative[F[_]] extends Functor[F] {
   }
 }
 
+//noinspection NoReturnTypeForImplicitDef
 object Applicatives {
   implicit val streamApplicative = new Applicative[Stream] {
     override def unit[A](a: => A): Stream[A] = Stream.continually(a)
@@ -61,6 +64,13 @@ object Applicatives {
       a <- fa
       b <- fb
     } yield f(a,b)
+  }
+
+  type Const[A,B] = A
+
+  implicit def monoidApplicative[M](M: Monoid[M]) = new Applicative[({type f[x] = Const[M,x]})#f] {
+    override def unit[A](a: => A): M = M.zero
+    override def map2[A, B, C](a: M, b: M)(f: (A, B) => C): M = M.op(a,b)
   }
 }
 
@@ -81,12 +91,26 @@ object Validation {
   }
 }
 
-trait Traverse[F[_]] extends Functor[F] {
+trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
+  def traverse[G[_]: Applicative,A,B](fa: F[A])(f: A => G[B]): G[F[B]] = sequence(map(fa)(f))
+  def sequence[G[_]: Applicative,A](fga: F[G[A]]): G[F[A]] = traverse(fga)(identity)
   /* ------- Exercise 12.14 -------- */
   import Monads._, Id._
   override def map[A, B](fa: F[A])(f: A => B): F[B] = traverse[Id,A,B](fa)(a => Id(f(a))).value
-  def traverse[G[_]: Applicative,A,B](fa: F[A])(f: A => G[B]): G[F[B]] = sequence(map(fa)(f))
-  def sequence[G[_]: Applicative,A](fga: F[G[A]]): G[F[A]] = traverse(fga)(identity)
+
+  import Applicatives._
+  override def foldMap[A, M](as: F[A])(f: A => M)(mb: Monoid[M]): M =
+    traverse[({type f[x] = M})#f,A,Nothing](as)(f)(monoidApplicative(mb))
+
+  def traverseS[S,A,B](fa: F[A])(f: A => State[S,B]): State[S,F[B]] =
+    traverse[({type f[x] = State[S,x]})#f,A,B](fa)(f)(Monads.stateMonad)
+
+  def mapAccum[S,A,B](fa: F[A], s: S)(f: (A,S) => (B,S)): (F[B],S) =
+    traverseS(fa)(a => for {
+      s1 <- State.get[S]
+      (b, s2) = f(a, s1)
+      _ <- State.set(s2)
+    } yield b).run(s)
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
