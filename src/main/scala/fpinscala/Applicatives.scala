@@ -160,4 +160,11 @@ object Traverse {
       G.map2(h, t)(Tree(_,_))
     }
   }
+
+  /* -------- Exercise 12.20 -------- */
+  def composeM[F[_],G[_]](F: Monad[F],G: Monad[G],T: Traverse[G]): Monad[({type f[x] = F[G[x]]})#f] = new Monad[({type f[x] = F[G[x]]})#f] {
+    implicit val FA: Applicative[F] = F
+    override def unit[A](a: => A): F[G[A]] = F.unit(G.unit(a))
+    override def flatMap[A, B](ma: F[G[A]])(f: A => F[G[B]]): F[G[B]] = F.flatMap(ma)(ga => F.map(T.sequence(G.map(ga)(f)))(G.join))
+  }
 }
