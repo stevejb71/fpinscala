@@ -121,6 +121,13 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   /* -------- Exercise 12.17 -------- */
   def foldLeftViaMapAccum[A, B](as: F[A])(z: B)(f: (B, A) => B): B =
     mapAccum(as,z)((a,b) => ((),f(b,a)))._2
+
+  /* -------- Exercise 12.18 -------- */
+  def fuse[G[_],H[_],A,B](fa: F[A])(f: A => G[B],g: A => H[B])(G: Applicative[G],H:Applicative[H]): (G[F[B]],H[F[B]]) = {
+    type Prod[x] = (G[x], H[x])
+    traverse[Prod,A,B](fa)(a => (f(a),g(a)))(G product H)
+  }
+
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
