@@ -95,7 +95,7 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def traverse[G[_]: Applicative,A,B](fa: F[A])(f: A => G[B]): G[F[B]] = sequence(map(fa)(f))
   def sequence[G[_]: Applicative,A](fga: F[G[A]]): G[F[A]] = traverse(fga)(identity)
   /* ------- Exercise 12.14 -------- */
-  import Monads._, Id._
+  import Monads._
   override def map[A, B](fa: F[A])(f: A => B): F[B] = traverse[Id,A,B](fa)(a => Id(f(a))).value
 
   import Applicatives._
@@ -111,6 +111,13 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
       (b, s2) = f(a, s1)
       _ <- State.set(s2)
     } yield b).run(s)
+
+  /* -------- Exercise 12.16 -------- */
+  override def toList[A](fa: F[A]): List[A] = mapAccum(fa, Nil:List[A])((a,s) => ((),a::s))._2.reverse
+
+  def reverse[A](fa: F[A]): F[A] =
+    mapAccum(fa,toList(fa).reverse)((a,as) => (as.head,as.tail))._1
+
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])

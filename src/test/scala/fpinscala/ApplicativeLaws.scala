@@ -7,6 +7,8 @@ object Util {
 }
 
 import Util._
+import org.scalacheck.Properties
+import org.scalacheck.Prop.forAll
 
 object ApplicativeLaws {
   def functorIdentity[M[_], A, B](F: Applicative[M], v: M[A]): Boolean = F.map(v)(identity) === v
@@ -23,3 +25,8 @@ object ApplicativeLaws {
   }
 }
 
+object TraversableProperties extends Properties("Traversable") {
+  import Traverse.listTraverse
+
+  property("list reverse") = forAll{(xs: List[Int]) => listTraverse.reverse(listTraverse.reverse(xs)) === xs}
+}
