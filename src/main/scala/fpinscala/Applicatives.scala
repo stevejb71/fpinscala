@@ -92,11 +92,11 @@ object Validation {
 }
 
 trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
-  def traverse[G[_]: Applicative,A,B](fa: F[A])(f: A => G[B]): G[F[B]] = sequence(map(fa)(f))
+  def traverse[G[_],A,B](fa: F[A])(f: A => G[B])(implicit G: Applicative[G]): G[F[B]] = sequence(map(fa)(f))
   def sequence[G[_]: Applicative,A](fga: F[G[A]]): G[F[A]] = traverse(fga)(identity)
   /* ------- Exercise 12.14 -------- */
   import Monads._
-  override def map[A, B](fa: F[A])(f: A => B): F[B] = traverse[Id,A,B](fa)(a => Id(f(a))).value
+  override def map[A, B](fa: F[A])(f: A => B): F[B] = traverse[Id,A,B](fa)(a => Id(f(a)))(Monads.Id.idMonad).value
 
   import Applicatives._
   override def foldMap[A, M](as: F[A])(f: A => M)(mb: Monoid[M]): M =
@@ -118,6 +118,9 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
   def reverse[A](fa: F[A]): F[A] =
     mapAccum(fa,toList(fa).reverse)((a,as) => (as.head,as.tail))._1
 
+  /* -------- Exercise 12.17 -------- */
+  def foldLeftViaMapAccum[A, B](as: F[A])(z: B)(f: (B, A) => B): B =
+    mapAccum(as,z)((a,b) => ((),f(b,a)))._2
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
