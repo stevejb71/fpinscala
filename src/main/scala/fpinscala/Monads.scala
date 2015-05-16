@@ -25,6 +25,12 @@ object Monads {
     def replicateM(n: Int): M[List[A]] = implicitly[Monad[M]].replicateM(n, ma)
   }
 
+  def stateMonad[S] = new Monad[({type f[x] = State[S, x]})#f] {
+    def unit[A](a: => A): State[S, A] = State(s => (a, s))
+    override def flatMap[A,B](st: State[S, A])(f: A => State[S, B]): State[S, B] =
+      st flatMap f
+  }
+
   /* -------- Exercise 11.1 ------- */
   val optionMonad = new Monad[Option] {
     override def unit[A](a: => A) = Some(a)
