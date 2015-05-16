@@ -47,18 +47,18 @@ trait Applicative[F[_]] extends Functor[F] {
 
 //noinspection NoReturnTypeForImplicitDef
 object Applicatives {
-  implicit val streamApplicative = new Applicative[Stream] {
+  val streamApplicative = new Applicative[Stream] {
     override def unit[A](a: => A): Stream[A] = Stream.continually(a)
     override def map2[A, B, C](fa: Stream[A], fb: Stream[B])(f: (A, B) => C): Stream[C] = (fa zip fb) map f.tupled
   }
-  implicit val listApplicative = new Applicative[List] {
+  val listApplicative = new Applicative[List] {
     override def unit[A](a: => A): List[A] = List(a)
     override def map2[A, B, C](fa: List[A], fb: List[B])(f: (A, B) => C): List[C] = for {
       a <- fa
       b <- fb
     } yield f(a,b)
   }
-  implicit val optionApplicative = new Applicative[Option] {
+  val optionApplicative = new Applicative[Option] {
     override def unit[A](a: => A): Option[A] = Some(a)
     override def map2[A, B, C](fa: Option[A], fb: Option[B])(f: (A, B) => C): Option[C] = for {
       a <- fa
@@ -68,7 +68,7 @@ object Applicatives {
 
   type Const[A,B] = A
 
-  implicit def monoidApplicative[M](M: Monoid[M]) = new Applicative[({type f[x] = Const[M,x]})#f] {
+  def monoidApplicative[M](M: Monoid[M]) = new Applicative[({type f[x] = Const[M,x]})#f] {
     override def unit[A](a: => A): M = M.zero
     override def map2[A, B, C](a: M, b: M)(f: (A, B) => C): M = M.op(a,b)
   }
@@ -128,6 +128,11 @@ trait Traverse[F[_]] extends Functor[F] with Foldable[F] {
     traverse[Prod,A,B](fa)(a => (f(a),g(a)))(G product H)
   }
 
+  /* -------- Exercise 12.19 -------- */
+  def compose[G[_]](implicit G: Traverse[G]): Traverse[({type f[x] = F[G[x]]})#f] = new Traverse[({type f[x] = F[G[x]]})#f] {
+    override def traverse[C[_]:Applicative, A, B](fa: F[G[A]])(f: A => C[B]) =
+      Traverse.this.traverse(fa)(ga => G.traverse(ga)(f))
+  }
 }
 
 case class Tree[+A](head: A, tail: List[Tree[A]])
